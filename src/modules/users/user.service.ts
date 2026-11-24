@@ -17,8 +17,8 @@ const registerUserIntoDb = async (payload: regUserPayload) => {
             name,
             email,
             password: hashPassword,
-            profile:{
-                create:{
+            profile: {
+                create: {
                     profilePhoto
                 },
             }
@@ -48,44 +48,80 @@ const registerUserIntoDb = async (payload: regUserPayload) => {
     return user;
 }
 
-const getMyProfileFromDB=async(userId:string)=>{
-    const user=await prisma.user.findUniqueOrThrow({
-        where:{id:userId},
-        omit:{
-            password:true
+const getMyProfileFromDB = async (userId: string) => {
+    const user = await prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        omit: {
+            password: true
         },
-        include:{
-            profile:true
+        include: {
+            profile: true
         }
     });
     return user
 };
 
-const updateMyProfileInDB=async(userId:string, payload:any)=>{
-    const {email,name,profilePhoto,bio}=payload;
+const updateMyProfileInDB = async (userId: string, payload: any) => {
+    // const {email,name,profilePhoto,bio}=payload;
 
-    const updatedUser=await prisma.user.update({
-        where:{
-            id:userId
-        },
-        data:{
-            name,
-            email,
-            profile:{
-                update:{
-                    profilePhoto,
-                    bio
+    // const updatedUser=await prisma.user.update({
+    //     where:{
+    //         id:userId
+    //     },
+    //     data:{
+    //         name,
+    //         email,
+    //         profile:{
+    //             update:{
+    //                 profilePhoto,
+    //                 bio
+    //             }
+    //         }
+    //     },
+    //     omit:{
+    //         password:true
+    //     },
+    //     include:{
+    //         profile:true
+    //     }
+    // });
+    // return updatedUser;
+
+    const { email, name, profilePhoto, bio } = payload;
+
+    const transaction = await prisma.$transaction(
+        async (tx) => {
+            const updatedUser = await tx.user.update({
+                where: {
+                    id: userId
+                },
+                data: {
+                    name,
+                    email,
+                    profile: {
+                        upsert: {
+                            create: {
+                                profilePhoto,
+                                bio
+                            },
+                            update: {
+                                profilePhoto,
+                                bio
+                            }
+                        }
+                    }
+                }, omit: {
+                    password: true,
+                },
+                include: {
+                    profile: true
                 }
-            }
-        },
-        omit:{
-            password:true
-        },
-        include:{
-            profile:true
+            });
+            return updatedUser
+
         }
-    });
-    return updatedUser;
+    )
+    return transaction
 };
 
 export const userServe = {

@@ -50,8 +50,43 @@ const loginUserIntoDB = async (payLoad: ILoginUser) => {
         accessToken,
         refreshToken
     };
+};
+
+const refreshToken=async(refreshToken:string)=>{
+    const verifiedRefreshToken=jwtutils.verifyToken(refreshToken,config.jwt_refresh_secret as string)
+
+    if(typeof verifiedRefreshToken==='string'){
+        throw new Error("Invalid token payload");
+    }
+
+    const {id}=verifiedRefreshToken;
+    const user= await prisma.user.findUniqueOrThrow({
+        where:{
+            id
+        }
+    });
+    if(!user){
+      throw new Error("User not found");
+    }
+
+    if(user.activeStatus==="BLOCKED"){
+        throw new Error("User is blocked")
+    }
+
+    const jwtPayload={
+        id,
+        name: user.name,
+        email:user.email,
+        role:user.role
+    }
+
+    const accessToken=jwtutils.createToken(jwtPayload,config.jwt_access_secret as string,config.jwt_access_expires_in as SignOptions)
+
+
+    return {accessToken}
 }
 
 export const authService = {
-    loginUserIntoDB
+    loginUserIntoDB,
+    refreshToken
 }

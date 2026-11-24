@@ -10,7 +10,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "stripe:webhook": "stripe listen --all-snapshot --forward-to localhost:5000/api/subscription/webhook"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
@@ -35,6 +36,7 @@
     "express": "^5.3.0",
     "http-status": "^2.1.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "stripe": "^23.2.0"
   }
 }
